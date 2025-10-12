@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Campaign Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Campaign Tracker</h1>
+      <div id="login-area">
+        <input id="username" placeholder="username" />
+        <input id="password" type="password" placeholder="password" />
+        <button id="login-btn">Login</button>
+        <span id="user-label"></span>
+      </div>
+    </header>
+
+    <section class="dashboard">
+      <div class="card">
+        <h3>Total Campaigns</h3>
+        <div id="total-count">0</div>
+      </div>
+      <div class="card">
+        <h3>Active</h3>
+        <div id="active-count">0</div>
+      </div>
+      <div class="card">
+        <h3>Paused</h3>
+        <div id="paused-count">0</div>
+      </div>
+      <div class="card">
+        <h3>Completed</h3>
+        <div id="completed-count">0</div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <form id="campaign-form">
+        <input id="campaign_name" placeholder="Campaign Name" required />
+        <input id="client_name" placeholder="Client Name" required />
+        <input id="start_date" type="date" required />
+        <select id="status">
+          <option>Active</option>
+          <option>Paused</option>
+          <option>Completed</option>
+        </select>
+        <button type="submit">Add Campaign</button>
+      </form>
+
+      <div class="filters">
+        <input id="search" placeholder="Search by campaign or client" />
+        <select id="filter-status">
+          <option>All</option>
+          <option>Active</option>
+          <option>Paused</option>
+          <option>Completed</option>
+        </select>
+        <button id="refresh">Refresh</button>
+      </div>
+    </section>
+
+    <section>
+      <table id="campaign-table">
+        <thead>
+          <tr>
+            <th>Campaign</th>
+            <th>Client</th>
+            <th>Start Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
