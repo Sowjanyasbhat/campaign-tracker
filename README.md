@@ -1,4 +1,4 @@
-# GoGig Campaign Tracker
+# Campaign Tracker
 
 ## Overview
 A simple full-stack web app to manage marketing campaigns. Users can:  
