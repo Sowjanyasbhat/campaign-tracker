@@ -1,17 +1,29 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
-app = Flask(__name__)
+
+# 👇 Serve frontend (change folder name if needed)
+app = Flask(__name__, static_folder="frontend", static_url_path="")
 CORS(app)
+
+# MongoDB setup
 MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
 client = MongoClient(MONGODB_URI)
 db = client['gogig_db']
 campaigns_col = db['campaigns']
+
+# 👇 Serve frontend index.html
+@app.route('/')
+def serve_index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+# === API ROUTES ===
 @app.route('/api/health')
 def health():
     return jsonify({'status': 'ok'})
+
 @app.route('/api/campaigns', methods=['POST'])
 def add_campaign():
     data = request.json
@@ -28,6 +40,7 @@ def add_campaign():
     res = campaigns_col.insert_one(doc)
     doc['_id'] = str(res.inserted_id)
     return jsonify(doc), 201
+
 @app.route('/api/campaigns', methods=['GET'])
 def get_campaigns():
     q = request.args.get('q')
@@ -38,11 +51,11 @@ def get_campaigns():
     if q:
         regex = {'$regex': q, '$options': 'i'}
         filter_q['$or'] = [{'campaign_name': regex}, {'client_name': regex}]
-
     docs = list(campaigns_col.find(filter_q))
     for d in docs:
         d['_id'] = str(d['_id'])
     return jsonify(docs)
+
 @app.route('/api/campaigns/<id>', methods=['PUT'])
 def update_campaign(id):
     data = request.json
@@ -71,5 +84,11 @@ def login():
         return jsonify({'token': 'dummy-token', 'username': 'admin'})
     return jsonify({'error': 'Invalid credentials'}), 401
 
+# 👇 Serve static files like JS/CSS
+@app.route('/<path:path>')
+def serve_static_files(path):
+    return send_from_directory(app.static_folder, path)
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
