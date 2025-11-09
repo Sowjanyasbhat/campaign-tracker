@@ -4,26 +4,31 @@ from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
 
-# 👇 Serve frontend (change folder name if needed)
+# Initialize Flask app
 app = Flask(__name__, static_folder="frontend", static_url_path="")
 CORS(app)
 
-# MongoDB setup
-MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
+# --- MongoDB Connection ---
+# It will use the MONGODB_URI from Render environment variable if available
+MONGODB_URI = os.environ.get(
+    'MONGODB_URI',
+    'mongodb+srv://admin:<your_password>@cluster0.w0r8hn0.mongodb.net/gogig_db?retryWrites=true&w=majority'
+)
 client = MongoClient(MONGODB_URI)
 db = client['gogig_db']
 campaigns_col = db['campaigns']
 
-# 👇 Serve frontend index.html
+# --- Serve frontend ---
 @app.route('/')
 def serve_index():
     return send_from_directory(app.static_folder, 'index.html')
 
-# === API ROUTES ===
+# --- Health Check ---
 @app.route('/api/health')
 def health():
     return jsonify({'status': 'ok'})
 
+# --- Add Campaign ---
 @app.route('/api/campaigns', methods=['POST'])
 def add_campaign():
     data = request.json
@@ -41,6 +46,7 @@ def add_campaign():
     doc['_id'] = str(res.inserted_id)
     return jsonify(doc), 201
 
+# --- Get Campaigns ---
 @app.route('/api/campaigns', methods=['GET'])
 def get_campaigns():
     q = request.args.get('q')
@@ -56,6 +62,7 @@ def get_campaigns():
         d['_id'] = str(d['_id'])
     return jsonify(docs)
 
+# --- Update Campaign ---
 @app.route('/api/campaigns/<id>', methods=['PUT'])
 def update_campaign(id):
     data = request.json
@@ -68,6 +75,7 @@ def update_campaign(id):
     doc['_id'] = str(doc['_id'])
     return jsonify(doc)
 
+# --- Delete Campaign ---
 @app.route('/api/campaigns/<id>', methods=['DELETE'])
 def delete_campaign(id):
     res = campaigns_col.delete_one({'_id': ObjectId(id)})
@@ -75,6 +83,7 @@ def delete_campaign(id):
         return jsonify({'error': 'Not found'}), 404
     return jsonify({'deleted': id})
 
+# --- Login API ---
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
@@ -84,11 +93,12 @@ def login():
         return jsonify({'token': 'dummy-token', 'username': 'admin'})
     return jsonify({'error': 'Invalid credentials'}), 401
 
-# 👇 Serve static files like JS/CSS
+# --- Serve Static Files (JS, CSS, etc.) ---
 @app.route('/<path:path>')
 def serve_static_files(path):
     return send_from_directory(app.static_folder, path)
 
+# --- Run App ---
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
