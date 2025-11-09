@@ -3,15 +3,34 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
+
 app = Flask(__name__)
 CORS(app)
+
+# MongoDB connection
 MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
 client = MongoClient(MONGODB_URI)
 db = client['gogig_db']
 campaigns_col = db['campaigns']
+
+# ✅ Root route (homepage)
+@app.route('/')
+def home():
+    return jsonify({
+        "message": "🚀 Flask API is live on Render!",
+        "routes": [
+            "/api/health",
+            "/api/campaigns",
+            "/api/login"
+        ]
+    })
+
+# Health check route
 @app.route('/api/health')
 def health():
     return jsonify({'status': 'ok'})
+
+# Add campaign
 @app.route('/api/campaigns', methods=['POST'])
 def add_campaign():
     data = request.json
@@ -28,6 +47,8 @@ def add_campaign():
     res = campaigns_col.insert_one(doc)
     doc['_id'] = str(res.inserted_id)
     return jsonify(doc), 201
+
+# Get campaigns
 @app.route('/api/campaigns', methods=['GET'])
 def get_campaigns():
     q = request.args.get('q')
@@ -43,6 +64,8 @@ def get_campaigns():
     for d in docs:
         d['_id'] = str(d['_id'])
     return jsonify(docs)
+
+# Update campaign
 @app.route('/api/campaigns/<id>', methods=['PUT'])
 def update_campaign(id):
     data = request.json
@@ -55,6 +78,7 @@ def update_campaign(id):
     doc['_id'] = str(doc['_id'])
     return jsonify(doc)
 
+# Delete campaign
 @app.route('/api/campaigns/<id>', methods=['DELETE'])
 def delete_campaign(id):
     res = campaigns_col.delete_one({'_id': ObjectId(id)})
@@ -62,6 +86,7 @@ def delete_campaign(id):
         return jsonify({'error': 'Not found'}), 404
     return jsonify({'deleted': id})
 
+# Simple login
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.json
@@ -72,4 +97,5 @@ def login():
     return jsonify({'error': 'Invalid credentials'}), 401
 
 if __name__ == '__main__':
+    # Ensure Flask listens on all interfaces (important for Render)
     app.run(debug=True, host='0.0.0.0', port=5000)
